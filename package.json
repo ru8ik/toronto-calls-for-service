@@ -2,6 +2,7 @@
   "name": "toronto-calls-for-service",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://www.ru8iks.com/toronto-calls-for-service",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
