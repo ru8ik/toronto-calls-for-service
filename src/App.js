@@ -8,13 +8,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: 'CALLTIME', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'OCCURRENCE_TIME', direction: 'desc' });
   const [filters, setFilters] = useState({
     division: '',
-    type: '',
-    startDate: '',
-    endDate: '',
-    location: ''
+    type: ''
   });
 
   const API_URL = 'https://services.arcgis.com/S9th0jAJ7bqgIRjw/arcgis/rest/services/C4S_Public_NoGO/FeatureServer/0/query?where=1=1&outFields=*&f=json';
@@ -28,30 +25,19 @@ function App() {
         // Debug: Log the first feature to see its structure
         if (response.data.features.length > 0) {
           const firstRecord = response.data.features[0].attributes;
-          
-          // Log the complete fields and values to better understand the data structure
-          console.log('=== API FIELD MAPPING DEBUG INFO ===');
-          console.log('Raw API Response Sample (first record):', firstRecord);
-          console.log('All available fields:', Object.keys(firstRecord).join(', '));
-          
-          // Log each field and its value for proper mapping
-          console.log('=== FIELD BY FIELD ANALYSIS ===');
-          Object.keys(firstRecord).forEach(key => {
-            console.log(`Field "${key}": ${JSON.stringify(firstRecord[key])}`);
-          });
+          console.log('API Response Sample:', firstRecord);
         }
         
         // Process and format the data
-        const formattedCalls = response.data.features.map((feature, index) => {
+        const formattedCalls = response.data.features.map((feature) => {
           const attributes = feature.attributes;
           try {
-            // Handle date formatting
+            // Handle date formatting - use OCCURRENCE_TIME field
             let callDate;
-            if (typeof attributes.CALLTIME === 'number') {
-              // ArcGIS typically returns timestamps in milliseconds since epoch (Jan 1, 1970)
-              callDate = new Date(attributes.CALLTIME);
-            } else if (attributes.CALLTIME) {
-              callDate = new Date(attributes.CALLTIME);
+            if (typeof attributes.OCCURRENCE_TIME === 'number') {
+              callDate = new Date(attributes.OCCURRENCE_TIME);
+            } else if (typeof attributes.OCCURRENCE_TIME_AGOL === 'number') {
+              callDate = new Date(attributes.OCCURRENCE_TIME_AGOL);
             } else {
               callDate = new Date(0);
             }
@@ -61,52 +47,22 @@ function App() {
               ? 'Unknown' 
               : format(callDate, 'h:mm a');  // Format as "7:00 PM"
               
-            const formattedDate = isNaN(callDate.getTime()) 
-              ? 'Unknown' 
-              : format(callDate, 'MM/dd/yyyy');
-
-            // Get the Type - try different possible field names
-            const typeValue = attributes.TYP_ENG || 
-                             attributes.TYPE || 
-                             attributes.TYPEDESC || 
-                             attributes.CALL_TYPE || '';
-            
-            // Get the Location - try different possible field names
-            const locationValue = attributes.LOCATION || 
-                                 attributes.STREET || 
-                                 attributes.ADDRESS ||
-                                 attributes.ADDR ||
-                                 '';
-            
-            // Get Cross Street values
-            const crossStreet1 = attributes.CROSS1 || 
-                                attributes.X1 || 
-                                attributes.CROSS || 
-                                '';
-            
-            const crossStreet2 = attributes.CROSS2 || 
-                                attributes.X2 || 
-                                '';
-            
             return {
               ...attributes,
               formattedTime,
-              formattedDate,
-              TYPEDESC: typeValue,
-              LOCATION: locationValue,
-              CROSS1: crossStreet1,
-              CROSS2: crossStreet2
+              // Use the correct fields from the API
+              DIVISION: attributes.DIVISION || '',
+              CALL_TYPE: attributes.CALL_TYPE || '',
+              CROSS_STREETS: attributes.CROSS_STREETS || ''
             };
           } catch (dateError) {
             console.error('Error formatting date:', dateError);
             return {
               ...attributes,
               formattedTime: 'Unknown',
-              formattedDate: 'Unknown',
-              TYPEDESC: attributes.TYP_ENG || attributes.TYPE || attributes.TYPEDESC || '',
-              LOCATION: attributes.LOCATION || attributes.STREET || attributes.ADDRESS || '',
-              CROSS1: attributes.CROSS1 || attributes.X1 || attributes.CROSS || '',
-              CROSS2: attributes.CROSS2 || attributes.X2 || ''
+              DIVISION: attributes.DIVISION || '',
+              CALL_TYPE: attributes.CALL_TYPE || '',
+              CROSS_STREETS: attributes.CROSS_STREETS || ''
             };
           }
         });
@@ -168,24 +124,7 @@ function App() {
       }
       
       // Filter by type
-      if (filters.type && !call.TYPEDESC?.toLowerCase().includes(filters.type.toLowerCase())) {
-        return false;
-      }
-      
-      // Filter by location
-      if (filters.location && 
-          !(call.LOCATION?.toLowerCase().includes(filters.location.toLowerCase()) || 
-            call.CROSS1?.toLowerCase().includes(filters.location.toLowerCase()) || 
-            call.CROSS2?.toLowerCase().includes(filters.location.toLowerCase()))) {
-        return false;
-      }
-      
-      // Filter by date range
-      if (filters.startDate && new Date(call.CALLTIME) < new Date(filters.startDate)) {
-        return false;
-      }
-      
-      if (filters.endDate && new Date(call.CALLTIME) > new Date(filters.endDate)) {
+      if (filters.type && !call.CALL_TYPE?.toLowerCase().includes(filters.type.toLowerCase())) {
         return false;
       }
       
@@ -206,10 +145,7 @@ function App() {
   const resetFilters = () => {
     setFilters({
       division: '',
-      type: '',
-      startDate: '',
-      endDate: '',
-      location: ''
+      type: ''
     });
   };
 
@@ -228,8 +164,8 @@ function App() {
   const callTypes = React.useMemo(() => {
     const uniqueTypes = new Set();
     calls.forEach(call => {
-      if (call.TYPEDESC) {
-        uniqueTypes.add(call.TYPEDESC);
+      if (call.CALL_TYPE) {
+        uniqueTypes.add(call.CALL_TYPE);
       }
     });
     return Array.from(uniqueTypes).sort();
@@ -278,37 +214,6 @@ function App() {
             </select>
           </div>
 
-          <div className="filter-group">
-            <label>Location:</label>
-            <input 
-              type="text" 
-              name="location" 
-              value={filters.location} 
-              onChange={handleFilterChange} 
-              placeholder="Enter street name"
-            />
-          </div>
-
-          <div className="filter-group">
-            <label>Start Date:</label>
-            <input 
-              type="date" 
-              name="startDate" 
-              value={filters.startDate} 
-              onChange={handleFilterChange} 
-            />
-          </div>
-
-          <div className="filter-group">
-            <label>End Date:</label>
-            <input 
-              type="date" 
-              name="endDate" 
-              value={filters.endDate} 
-              onChange={handleFilterChange} 
-            />
-          </div>
-
           <button className="reset-button" onClick={resetFilters}>Reset Filters</button>
           <button className="refresh-button" onClick={fetchCalls}>Refresh Now</button>
         </div>
@@ -329,14 +234,11 @@ function App() {
                 <th onClick={() => handleSort('DIVISION')}>
                   Division {sortConfig.key === 'DIVISION' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                 </th>
-                <th onClick={() => handleSort('TYPEDESC')}>
-                  Type {sortConfig.key === 'TYPEDESC' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                <th onClick={() => handleSort('CALL_TYPE')}>
+                  Type {sortConfig.key === 'CALL_TYPE' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                 </th>
-                <th onClick={() => handleSort('LOCATION')}>
-                  Location {sortConfig.key === 'LOCATION' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                </th>
-                <th onClick={() => handleSort('CROSS1')}>
-                  Cross Street {sortConfig.key === 'CROSS1' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                <th onClick={() => handleSort('CROSS_STREETS')}>
+                  Cross Street {sortConfig.key === 'CROSS_STREETS' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
                 </th>
               </tr>
             </thead>
@@ -346,24 +248,13 @@ function App() {
                   <tr key={index}>
                     <td>{call.formattedTime}</td>
                     <td>{call.DIVISION || ''}</td>
-                    <td>
-                      {/* Try to directly access the field that might contain the type */}
-                      {call.TYP_ENG || call.TYPE || call.TYPEDESC || ''}
-                    </td>
-                    <td>
-                      {/* Try to directly access the field that might contain the location */}
-                      {call.LOCATION || call.STREET || call.ADDRESS || call.ADDR || ''}
-                    </td>
-                    <td>
-                      {/* Try to directly access the fields that might contain cross streets */}
-                      {call.CROSS1 || call.X1 || call.CROSS || ''}
-                      {(call.CROSS2 || call.X2) ? ` / ${call.CROSS2 || call.X2}` : ''}
-                    </td>
+                    <td>{call.CALL_TYPE || ''}</td>
+                    <td>{call.CROSS_STREETS || ''}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="no-results">No calls matching your filters</td>
+                  <td colSpan="4" className="no-results">No calls matching your filters</td>
                 </tr>
               )}
             </tbody>
