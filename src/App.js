@@ -174,13 +174,14 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>Toronto Calls for Service</h1>
+        <h1>Toronto Calls for Service List for OZ Security Group</h1>
         <p className="last-updated">
           Last updated: {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm:ss a') : 'Loading...'}
         </p>
         <p className="disclaimer">
-          Not affiliated with Toronto Police Services, Toronto Fire Services, or The City of Toronto - In case of Emergency call 911
-        </p>
+          Not affiliated with any Toronto emergencys services </p>
+          <p className="made by ">
+          Made by Ru8ik</p>
       </header>
 
       <div className="filter-container">
