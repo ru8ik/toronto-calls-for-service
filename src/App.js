@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import './App.css';
@@ -13,6 +13,22 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
+
+// Map helper component to update the map view when center changes
+function MapUpdater({ center, zoom }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, zoom, {
+        duration: 1.5, // animation duration in seconds
+        easeLinearity: 0.25
+      });
+    }
+  }, [center, zoom, map]);
+  
+  return null;
+}
 
 function App() {
   const [calls, setCalls] = useState([]);
@@ -338,13 +354,21 @@ function App() {
           <div className="map-container">
             <h3>Call Location Map <span className="section-accent">Toronto Area</span></h3>
             <p className="map-instruction">Click on a row above to view its location on the map</p>
-            <MapContainer center={mapCenter} zoom={13} style={{ height: '400px', width: '100%' }}>
+            <MapContainer center={mapCenter} zoom={13} className="leaflet-container">
+              <MapUpdater center={mapCenter} zoom={14} />
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
               {selectedCall && (
-                <Marker position={[selectedCall.LATITUDE, selectedCall.LONGITUDE]}>
+                <Marker 
+                  position={[selectedCall.LATITUDE, selectedCall.LONGITUDE]}
+                  eventHandlers={{
+                    mouseover: (e) => {
+                      e.target.openPopup();
+                    }
+                  }}
+                >
                   <Popup>
                     <div className="map-popup">
                       <div className="popup-header">Incident Details</div>
