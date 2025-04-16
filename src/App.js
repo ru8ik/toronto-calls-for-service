@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import './App.css';
+
+// Fix Leaflet default icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
 
 function App() {
   const [calls, setCalls] = useState([]);
@@ -13,6 +24,8 @@ function App() {
     division: '',
     type: ''
   });
+  const [selectedCall, setSelectedCall] = useState(null);
+  const [mapCenter, setMapCenter] = useState([43.6532, -79.3832]); // Toronto center
 
   const API_URL = 'https://services.arcgis.com/S9th0jAJ7bqgIRjw/arcgis/rest/services/C4S_Public_NoGO/FeatureServer/0/query?where=1=1&outFields=*&f=json';
 
@@ -171,6 +184,17 @@ function App() {
     return Array.from(uniqueTypes).sort();
   }, [calls]);
 
+  // Handle row click to show on map
+  const handleRowClick = (call) => {
+    if (call.LATITUDE && call.LONGITUDE) {
+      setSelectedCall(call);
+      setMapCenter([call.LATITUDE, call.LONGITUDE]);
+    }
+  };
+
+  // Limit table to 15 rows
+  const limitedCalls = filteredCalls.slice(0, 15);
+
   return (
     <div className="App">
       <header className="App-header">
@@ -225,42 +249,72 @@ function App() {
       ) : error ? (
         <div className="error">{error}</div>
       ) : (
-        <div className="table-container">
-          <table className="calls-table">
-            <thead>
-              <tr>
-                <th onClick={() => handleSort('formattedTime')}>
-                  Time {sortConfig.key === 'formattedTime' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                </th>
-                <th onClick={() => handleSort('DIVISION')}>
-                  Division {sortConfig.key === 'DIVISION' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                </th>
-                <th onClick={() => handleSort('CALL_TYPE')}>
-                  Type {sortConfig.key === 'CALL_TYPE' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                </th>
-                <th onClick={() => handleSort('CROSS_STREETS')}>
-                  Cross Street {sortConfig.key === 'CROSS_STREETS' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCalls.length > 0 ? (
-                filteredCalls.map((call, index) => (
-                  <tr key={index}>
-                    <td>{call.formattedTime}</td>
-                    <td>{call.DIVISION || ''}</td>
-                    <td>{call.CALL_TYPE || ''}</td>
-                    <td>{call.CROSS_STREETS || ''}</td>
-                  </tr>
-                ))
-              ) : (
+        <>
+          <div className="table-container">
+            <table className="calls-table">
+              <thead>
                 <tr>
-                  <td colSpan="4" className="no-results">No calls matching your filters</td>
+                  <th onClick={() => handleSort('formattedTime')}>
+                    Time {sortConfig.key === 'formattedTime' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('DIVISION')}>
+                    Division {sortConfig.key === 'DIVISION' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('CALL_TYPE')}>
+                    Type {sortConfig.key === 'CALL_TYPE' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th onClick={() => handleSort('CROSS_STREETS')}>
+                    Cross Street {sortConfig.key === 'CROSS_STREETS' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                  </th>
                 </tr>
+              </thead>
+              <tbody>
+                {limitedCalls.length > 0 ? (
+                  limitedCalls.map((call, index) => (
+                    <tr 
+                      key={index} 
+                      onClick={() => handleRowClick(call)}
+                      className={selectedCall && selectedCall.OBJECTID === call.OBJECTID ? 'selected-row' : ''}
+                    >
+                      <td>{call.formattedTime}</td>
+                      <td>{call.DIVISION}</td>
+                      <td>{call.CALL_TYPE}</td>
+                      <td>{call.CROSS_STREETS}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="no-data">No calls matching your filters</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+            <p className="table-info">Showing {limitedCalls.length} of {filteredCalls.length} calls</p>
+          </div>
+          
+          <div className="map-container">
+            <h3>Call Location Map</h3>
+            <p className="map-instruction">Click on a row above to view its location on the map</p>
+            <MapContainer center={mapCenter} zoom={13} style={{ height: '400px', width: '100%' }}>
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {selectedCall && (
+                <Marker position={[selectedCall.LATITUDE, selectedCall.LONGITUDE]}>
+                  <Popup>
+                    <div>
+                      <strong>Division:</strong> {selectedCall.DIVISION}<br />
+                      <strong>Type:</strong> {selectedCall.CALL_TYPE}<br />
+                      <strong>Location:</strong> {selectedCall.CROSS_STREETS}<br />
+                      <strong>Time:</strong> {selectedCall.formattedTime}
+                    </div>
+                  </Popup>
+                </Marker>
               )}
-            </tbody>
-          </table>
-        </div>
+            </MapContainer>
+          </div>
+        </>
       )}
       
       <footer>
