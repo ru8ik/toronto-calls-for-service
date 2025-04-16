@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -26,6 +26,9 @@ function App() {
   });
   const [selectedCall, setSelectedCall] = useState(null);
   const [mapCenter, setMapCenter] = useState([43.6532, -79.3832]); // Toronto center
+  const [showNotification, setShowNotification] = useState(false);
+  const [newCallsCount, setNewCallsCount] = useState(0);
+  const prevCallsRef = useRef([]);
 
   const API_URL = 'https://services.arcgis.com/S9th0jAJ7bqgIRjw/arcgis/rest/services/C4S_Public_NoGO/FeatureServer/0/query?where=1=1&outFields=*&f=json';
 
@@ -79,6 +82,27 @@ function App() {
             };
           }
         });
+
+        // Check for new calls (compare with previous calls)
+        if (prevCallsRef.current.length > 0) {
+          const currentCallIds = new Set(formattedCalls.map(call => call.OBJECTID));
+          const prevCallIds = new Set(prevCallsRef.current.map(call => call.OBJECTID));
+          
+          const newCalls = formattedCalls.filter(call => !prevCallIds.has(call.OBJECTID));
+          
+          if (newCalls.length > 0) {
+            setNewCallsCount(newCalls.length);
+            setShowNotification(true);
+            
+            // Auto-hide notification after 5 seconds
+            setTimeout(() => {
+              setShowNotification(false);
+            }, 5000);
+          }
+        }
+        
+        // Update the previous calls reference
+        prevCallsRef.current = formattedCalls;
         
         setCalls(formattedCalls);
         setLastUpdated(new Date());
@@ -192,20 +216,36 @@ function App() {
     }
   };
 
-  // Limit table to 15 rows
-  const limitedCalls = filteredCalls.slice(0, 15);
+  // Limit table to 30 rows per page
+  const limitedCalls = filteredCalls.slice(0, 30);
+
+  // Close notification
+  const closeNotification = () => {
+    setShowNotification(false);
+  };
 
   return (
     <div className="App">
+      {showNotification && (
+        <div className="notification">
+          <div className="notification-content">
+            <span className="notification-message">
+              {newCallsCount} new call{newCallsCount !== 1 ? 's' : ''} added to the list!
+            </span>
+            <button className="close-button" onClick={closeNotification}>×</button>
+          </div>
+        </div>
+      )}
+
       <header className="App-header">
-        <h1>Toronto Calls for Service List for OZ Security Group</h1>
+        <h1>Toronto Calls for Service</h1>
+        <div className="header-tagline">INDUSTRY LEADING SECURITY INTELLIGENCE</div>
         <p className="last-updated">
           Last updated: {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm:ss a') : 'Loading...'}
         </p>
         <p className="disclaimer">
-          Not affiliated with any Toronto emergencys services </p>
-          <p className="made by ">
-          Made by Ru8ik</p>
+          Powered by OZ Security Group | Not affiliated with any Toronto emergency services
+        </p>
       </header>
 
       <div className="filter-container">
@@ -251,6 +291,9 @@ function App() {
       ) : (
         <>
           <div className="table-container">
+            <div className="table-header">
+              <h3>Active Calls <span className="section-accent">Real-Time Monitoring</span></h3>
+            </div>
             <table className="calls-table">
               <thead>
                 <tr>
@@ -293,7 +336,7 @@ function App() {
           </div>
           
           <div className="map-container">
-            <h3>Call Location Map</h3>
+            <h3>Call Location Map <span className="section-accent">Toronto Area</span></h3>
             <p className="map-instruction">Click on a row above to view its location on the map</p>
             <MapContainer center={mapCenter} zoom={13} style={{ height: '400px', width: '100%' }}>
               <TileLayer
@@ -303,23 +346,30 @@ function App() {
               {selectedCall && (
                 <Marker position={[selectedCall.LATITUDE, selectedCall.LONGITUDE]}>
                   <Popup>
-                    <div>
-                      <strong>Division:</strong> {selectedCall.DIVISION}<br />
-                      <strong>Type:</strong> {selectedCall.CALL_TYPE}<br />
-                      <strong>Location:</strong> {selectedCall.CROSS_STREETS}<br />
-                      <strong>Time:</strong> {selectedCall.formattedTime}
+                    <div className="map-popup">
+                      <div className="popup-header">Incident Details</div>
+                      <div className="popup-content">
+                        <strong>Division:</strong> {selectedCall.DIVISION}<br />
+                        <strong>Type:</strong> {selectedCall.CALL_TYPE}<br />
+                        <strong>Location:</strong> {selectedCall.CROSS_STREETS}<br />
+                        <strong>Time:</strong> {selectedCall.formattedTime}
+                      </div>
                     </div>
                   </Popup>
                 </Marker>
               )}
             </MapContainer>
           </div>
+
+          <footer className="App-footer">
+            <div className="footer-content">
+              <div className="footer-tagline">COMMITTED TO INNOVATION AND EXCELLENCE</div>
+              <p className="footer-description">IN SECURITY RISK MITIGATION & PROTECTION SERVICES</p>
+              <p className="made-by">Made by Ru8ik</p>
+            </div>
+          </footer>
         </>
       )}
-      
-      <footer>
-        <p>© {new Date().getFullYear()} Toronto Calls for Service Viewer</p>
-      </footer>
     </div>
   );
 }
