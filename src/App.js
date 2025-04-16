@@ -255,12 +255,11 @@ function App() {
 
       <header className="App-header">
         <h1>Toronto Calls for Service</h1>
-        <div className="header-tagline">INDUSTRY LEADING SECURITY INTELLIGENCE</div>
         <p className="last-updated">
           Last updated: {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm:ss a') : 'Loading...'}
         </p>
         <p className="disclaimer">
-          Powered by OZ Security Group | Not affiliated with any Toronto emergency services
+          Not affiliated with any Toronto emergency services
         </p>
       </header>
 
