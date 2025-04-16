@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "https://www.ru8iks.com/toronto-calls-for-service/static/css/main.33d025eb.css",
-    "main.js": "https://www.ru8iks.com/toronto-calls-for-service/static/js/main.cf13c31f.js",
+    "main.css": "https://www.ru8iks.com/toronto-calls-for-service/static/css/main.2c4b0790.css",
+    "main.js": "https://www.ru8iks.com/toronto-calls-for-service/static/js/main.e808ed10.js",
     "static/js/453.7760a327.chunk.js": "https://www.ru8iks.com/toronto-calls-for-service/static/js/453.7760a327.chunk.js",
     "index.html": "https://www.ru8iks.com/toronto-calls-for-service/index.html",
-    "main.33d025eb.css.map": "https://www.ru8iks.com/toronto-calls-for-service/static/css/main.33d025eb.css.map",
-    "main.cf13c31f.js.map": "https://www.ru8iks.com/toronto-calls-for-service/static/js/main.cf13c31f.js.map",
+    "main.2c4b0790.css.map": "https://www.ru8iks.com/toronto-calls-for-service/static/css/main.2c4b0790.css.map",
+    "main.e808ed10.js.map": "https://www.ru8iks.com/toronto-calls-for-service/static/js/main.e808ed10.js.map",
     "453.7760a327.chunk.js.map": "https://www.ru8iks.com/toronto-calls-for-service/static/js/453.7760a327.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.33d025eb.css",
-    "static/js/main.cf13c31f.js"
+    "static/css/main.2c4b0790.css",
+    "static/js/main.e808ed10.js"
   ]
 }
