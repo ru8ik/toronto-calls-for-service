@@ -14,6 +14,146 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
+// Neighbourhood to Division mapping
+const NEIGHBOURHOOD_TO_DIVISION = {
+  "South Parkdale (11/14)": ["11", "14"],
+  "Junction Area (11/12)": ["11", "12"],
+  "Runnymede-Bloor West Village (11)": ["11"],
+  "Roncesvalles (11)": ["11"],
+  "Dovercourt-Wallace Emerson-Junction (11/13/14)": ["11", "13", "14"],
+  "High Park North (11)": ["11"],
+  "High Park–Swansea (11)": ["11"],
+  "Weston–Pelham Park (11/12)": ["11", "12"],
+  "Lambton–Baby Point (11)": ["11"],
+  "Rockcliffe–Smythe (11/12)": ["11", "12"],
+  "Dufferin Grove (11/14)": ["11", "14"],
+  "Little Portugal (11/14)": ["11", "14"],
+  "Rustic (12)": ["12"],
+  "Keelesdale–Eglinton West (12)": ["12"],
+  "Mount Dennis (12)": ["12"],
+  "Beechborough–Greenbrook (12)": ["12"],
+  "Pelmo Park–Humberlea (12/31)": ["12", "31"],
+  "Weston (12)": ["12"],
+  "Brookhaven–Amesbury (12)": ["12"],
+  "Maple Leaf (12)": ["12"],
+  "Yorkdale–Glen Park (13/32)": ["13", "32"],
+  "Humewood–Cedarvale (13)": ["13"],
+  "Corso Italia–Davenport (13)": ["13"],
+  "Forest Hill North (13/53)": ["13", "53"],
+  "Casa Loma (13/53)": ["13", "53"],
+  "Forest Hill South (13/53)": ["13", "53"],
+  "Caledonia–Fairbank (13)": ["13"],
+  "Oakwood Village (13)": ["13"],
+  "Englemount–Lawrence (13/32)": ["13", "32"],
+  "Wychwood (13)": ["13"],
+  "Briar Hill–Belgravia (13)": ["13"],
+  "Trinity–Bellwoods (14)": ["14"],
+  "Waterfront Communities–The Island (14/51/52)": ["14", "51", "52"],
+  "Kensington–Chinatown (14/52)": ["14", "52"],
+  "Annex (14/53)": ["14", "53"],
+  "University (14/52)": ["14", "52"],
+  "Niagara (14)": ["14"],
+  "Palmerston–Little Italy (14)": ["14"],
+  "Fort York–Liberty Village (14)": ["14"],
+  "Stonegate–Queensway (22)": ["22"],
+  "Islington–City Centre West (22)": ["22"],
+  "Princess–Rosethorn (22)": ["22"],
+  "Etobicoke West Mall (22)": ["22"],
+  "Kingsway South (22)": ["22"],
+  "Humber Heights–Westmount (22/23)": ["22", "23"],
+  "Edenbridge–Humber Valley (22/23)": ["22", "23"],
+  "Eringate–Centennial–West Deane (22/23)": ["22", "23"],
+  "Alderwood (22)": ["22"],
+  "New Toronto (22)": ["22"],
+  "Long Branch (22)": ["22"],
+  "Markland Wood (22)": ["22"],
+  "Mimico (22)": ["22"],
+  "Thistletown–Beaumond Heights (23)": ["23"],
+  "Humbermede (23/31)": ["23", "31"],
+  "West Humber–Clairville (23)": ["23"],
+  "Kingsview Village–The Westway (23)": ["23"],
+  "Elms–Old Rexdale (23)": ["23"],
+  "Mount Olive–Silverstone–Jamestown (23)": ["23"],
+  "Rexdale–Kipling (23)": ["23"],
+  "Willowridge–Martin Grove–Richview (23)": ["23"],
+  "York University Heights (31/32)": ["31", "32"],
+  "Humber Summit (31)": ["31"],
+  "Glenfield–Jane Heights (31)": ["31"],
+  "Oakdale–Beverley Heights (31/32)": ["31", "32"],
+  "Black Creek (31)": ["31"],
+  "Lansing–Westgate (32)": ["32"],
+  "St. Andrew–Windfields (32/33)": ["32", "33"],
+  "Westminster–Branson (32)": ["32"],
+  "Clanton Park (32)": ["32"],
+  "Newtonbrook West (32)": ["32"],
+  "Bathurst Manor (32)": ["32"],
+  "Willowdale East (32)": ["32"],
+  "Willowdale West (32)": ["32"],
+  "Bedford Park–Nortown (32/53)": ["32", "53"],
+  "Bridle Path–Sunnybrook–York Mills (32/33/53)": ["32", "33", "53"],
+  "Lawrence Park North (32)": ["32"],
+  "Newtonbrook East (32)": ["32"],
+  "Victoria Village (33/55)": ["33", "55"],
+  "Bayview Woods–Steeles (33)": ["33"],
+  "Henry Farm (33)": ["33"],
+  "Hillcrest Village (33)": ["33"],
+  "Banbury–Don Mills (33)": ["33"],
+  "Parkwoods–Donalda (33)": ["33"],
+  "Bayview Village (33)": ["33"],
+  "Don Valley Village (33)": ["33"],
+  "Pleasant View (33)": ["33"],
+  "Leaside–Bennington (33/53/55)": ["33", "53", "55"],
+  "Tam O'Shanter–Sullivan (42)": ["42"],
+  "Centennial Scarborough (42/43)": ["42", "43"],
+  "Agincourt North (42)": ["42"],
+  "Agincourt South–Malvern West (42)": ["42"],
+  "L'Amoreaux (42)": ["42"],
+  "Rouge (42/43)": ["42", "43"],
+  "Malvern (42)": ["42"],
+  "Steeles (42)": ["42"],
+  "Milliken (42)": ["42"],
+  "Scarborough Village (43)": ["43"],
+  "Cliffcrest (43)": ["43"],
+  "Guildwood (43)": ["43"],
+  "West Hill (43)": ["43"],
+  "Highland Creek (43)": ["43"],
+  "Eglinton East (43)": ["43"],
+  "Bendale (43)": ["43"],
+  "Woburn (43)": ["43"],
+  "Morningside (43)": ["43"],
+  "South Riverdale (51/55)": ["51", "55"],
+  "Church–Yonge Corridor (51)": ["51"],
+  "North St. James Town (51)": ["51"],
+  "Regent Park (51)": ["51"],
+  "Cabbagetown–South St. James Town (51)": ["51"],
+  "Moss Park (51)": ["51"],
+  "St. Lawrence–East Bayfront–The Islands (51)": ["51"],
+  "Downtown Yonge East (51)": ["51"],
+  "Bay Street Corridor (52)": ["52"],
+  "Yonge–St. Clair (53)": ["53"],
+  "Thorncliffe Park (53)": ["53"],
+  "Broadview North (53/55)": ["53", "55"],
+  "Rosedale–Moore Park (53)": ["53"],
+  "Mount Pleasant East (53)": ["53"],
+  "Mount Pleasant West (53)": ["53"],
+  "Lawrence Park South (53)": ["53"],
+  "Yonge–Eglinton (53)": ["53"],
+  "The Beaches (55)": ["55"],
+  "Danforth East York (55)": ["55"],
+  "Danforth (55)": ["55"],
+  "Taylor–Massey (55)": ["55"],
+  "Flemingdon Park (55)": ["55"],
+  "North Riverdale (55)": ["55"],
+  "Greenwood–Coxwell (55)": ["55"],
+  "O'Connor–Parkview (55)": ["55"],
+  "Old East York (55)": ["55"],
+  "Blake–Jones (55)": ["55"],
+  "East End–Danforth (55)": ["55"],
+  "Playter Estates–Danforth (55)": ["55"],
+  "Woodbine–Lumsden (55)": ["55"],
+  "Woodbine Corridor (55)": ["55"]
+};
+
 // Map helper component to update the map view when center changes
 function MapUpdater({ center, zoom }) {
   const map = useMap();
@@ -38,6 +178,7 @@ function App() {
   const [sortConfig, setSortConfig] = useState({ key: 'OCCURRENCE_TIME', direction: 'desc' });
   const [filters, setFilters] = useState({
     division: '',
+    neighbourhood: '',
     type: ''
   });
   const [selectedCall, setSelectedCall] = useState(null);
@@ -171,8 +312,21 @@ function App() {
   // Apply filters
   const filteredCalls = React.useMemo(() => {
     return sortedCalls.filter(call => {
-      // Filter by division
-      if (filters.division && !call.DIVISION?.toString().toLowerCase().includes(filters.division.toLowerCase())) {
+      // Handle filtering by either division or neighbourhood
+      if (filters.neighbourhood) {
+        // If neighbourhood is selected, check if the call's division is in the list of divisions for this neighbourhood
+        const divisionsForNeighbourhood = NEIGHBOURHOOD_TO_DIVISION[filters.neighbourhood] || [];
+        
+        // Extract division number, removing 'D' prefix if it exists
+        const callDivision = call.DIVISION?.toString() || '';
+        const normalizedCallDivision = callDivision.replace(/^D/, '');
+        
+        // Check if the call's division (with or without D prefix) matches any of the divisions for this neighbourhood
+        if (!divisionsForNeighbourhood.some(div => div === normalizedCallDivision || `D${div}` === callDivision)) {
+          return false;
+        }
+      } else if (filters.division && !call.DIVISION?.toString().toLowerCase().includes(filters.division.toLowerCase())) {
+        // If only division filter is active (no neighbourhood), filter by division as before
         return false;
       }
       
@@ -188,16 +342,28 @@ function App() {
   // Handle filter changes
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    // Create a copy of the current filters
+    const newFilters = { ...filters };
+    
+    // Set the changed filter value
+    newFilters[name] = value;
+    
+    // If division is being set, clear neighbourhood and vice versa
+    if (name === 'division' && value !== '') {
+      newFilters.neighbourhood = '';
+    } else if (name === 'neighbourhood' && value !== '') {
+      newFilters.division = '';
+    }
+    
+    setFilters(newFilters);
   };
 
   // Reset filters
   const resetFilters = () => {
     setFilters({
       division: '',
+      neighbourhood: '',
       type: ''
     });
   };
@@ -280,10 +446,26 @@ function App() {
               name="division" 
               value={filters.division} 
               onChange={handleFilterChange}
+              disabled={filters.neighbourhood !== ''}
             >
               <option value="">All Divisions</option>
               {divisions.map(div => (
                 <option key={div} value={div}>{div}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Neighbourhood:</label>
+            <select 
+              name="neighbourhood" 
+              value={filters.neighbourhood} 
+              onChange={handleFilterChange}
+              disabled={filters.division !== ''}
+            >
+              <option value="">All Neighbourhoods</option>
+              {Object.keys(NEIGHBOURHOOD_TO_DIVISION).sort().map(neighbourhood => (
+                <option key={neighbourhood} value={neighbourhood}>{neighbourhood}</option>
               ))}
             </select>
           </div>
