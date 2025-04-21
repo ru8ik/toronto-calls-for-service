@@ -388,6 +388,20 @@ body {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
+.emergency-call {
+  background-color: rgba(220, 53, 69, 0.15) !important;
+  border-left: 4px solid #dc3545;
+}
+
+.emergency-call:hover {
+  background-color: rgba(220, 53, 69, 0.25) !important;
+}
+
+.emergency-call.selected-row {
+  background-color: rgba(220, 53, 69, 0.3) !important;
+  border-left: 4px solid #dc3545;
+}
+
 .table-info {
   text-align: right;
   font-size: 14px;
@@ -560,6 +574,24 @@ footer {
   text-transform: uppercase;
   font-size: 14px;
   letter-spacing: 0.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.emergency-header {
+  color: #dc3545;
+  border-bottom-color: #dc3545;
+}
+
+.emergency-badge {
+  background-color: #dc3545;
+  color: white;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-left: 6px;
 }
 
 .popup-content {

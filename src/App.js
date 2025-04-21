@@ -240,6 +240,14 @@ function App() {
     setShowNotification(false);
   };
 
+  // Check if a call is an emergency based on keywords
+  const isEmergencyCall = (callType) => {
+    if (!callType) return false;
+    const keywords = ['gun', 'knife', 'stabb', 'shoot', 'homicide', 'break', 'enter'];
+    const lowercaseType = callType.toLowerCase();
+    return keywords.some(keyword => lowercaseType.includes(keyword));
+  };
+
   return (
     <div className="App">
       {showNotification && (
@@ -332,7 +340,10 @@ function App() {
                     <tr 
                       key={index} 
                       onClick={() => handleRowClick(call)}
-                      className={selectedCall && selectedCall.OBJECTID === call.OBJECTID ? 'selected-row' : ''}
+                      className={`
+                        ${selectedCall && selectedCall.OBJECTID === call.OBJECTID ? 'selected-row' : ''}
+                        ${isEmergencyCall(call.CALL_TYPE) ? 'emergency-call' : ''}
+                      `}
                     >
                       <td>{call.formattedTime}</td>
                       <td>{call.DIVISION}</td>
@@ -370,7 +381,12 @@ function App() {
                 >
                   <Popup>
                     <div className="map-popup">
-                      <div className="popup-header">Incident Details</div>
+                      <div className={`popup-header ${isEmergencyCall(selectedCall.CALL_TYPE) ? 'emergency-header' : ''}`}>
+                        Incident Details
+                        {isEmergencyCall(selectedCall.CALL_TYPE) && (
+                          <span className="emergency-badge">Emergency</span>
+                        )}
+                      </div>
                       <div className="popup-content">
                         <strong>Division:</strong> {selectedCall.DIVISION}<br />
                         <strong>Type:</strong> {selectedCall.CALL_TYPE}<br />
