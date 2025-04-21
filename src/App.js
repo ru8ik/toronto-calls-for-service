@@ -186,6 +186,8 @@ function App() {
   const [showNotification, setShowNotification] = useState(false);
   const [newCallsCount, setNewCallsCount] = useState(0);
   const prevCallsRef = useRef([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 30;
 
   const API_URL = 'https://services.arcgis.com/S9th0jAJ7bqgIRjw/arcgis/rest/services/C4S_Public_NoGO/FeatureServer/0/query?where=1=1&outFields=*&f=json';
 
@@ -356,6 +358,9 @@ function App() {
       newFilters.division = '';
     }
     
+    // Reset to page 1 when filters change
+    setCurrentPage(1);
+    
     setFilters(newFilters);
   };
 
@@ -366,6 +371,7 @@ function App() {
       neighbourhood: '',
       type: ''
     });
+    setCurrentPage(1);
   };
 
   // Extract unique divisions for filter dropdown
@@ -395,15 +401,30 @@ function App() {
     if (call.LATITUDE && call.LONGITUDE) {
       setSelectedCall(call);
       setMapCenter([call.LATITUDE, call.LONGITUDE]);
+      
+      // Scroll to map section
+      const mapSection = document.querySelector('.map-container');
+      if (mapSection) {
+        mapSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
-
-  // Limit table to 30 rows per page
-  const limitedCalls = filteredCalls.slice(0, 30);
 
   // Close notification
   const closeNotification = () => {
     setShowNotification(false);
+  };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredCalls.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredCalls.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Handle page change
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: document.querySelector('.table-container').offsetTop - 20, behavior: 'smooth' });
   };
 
   // Check if a call is an emergency based on keywords
@@ -487,6 +508,10 @@ function App() {
           <button className="reset-button" onClick={resetFilters}>Reset Filters</button>
           <button className="refresh-button" onClick={fetchCalls}>Refresh Now</button>
         </div>
+        <div className="filter-info">
+          <p>The Division and Neighbourhood filters are mutually exclusive - selecting one disables the other.</p>
+          <p>The filter page refreshes automatically every 5 minutes.</p>
+        </div>
       </div>
 
       {loading ? (
@@ -517,8 +542,8 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {limitedCalls.length > 0 ? (
-                  limitedCalls.map((call, index) => (
+                {currentItems.length > 0 ? (
+                  currentItems.map((call, index) => (
                     <tr 
                       key={index} 
                       onClick={() => handleRowClick(call)}
@@ -540,7 +565,20 @@ function App() {
                 )}
               </tbody>
             </table>
-            <p className="table-info">Showing {limitedCalls.length} of {filteredCalls.length} calls</p>
+            <p className="table-info">Showing {currentItems.length} of {filteredCalls.length} calls</p>
+          </div>
+          
+          <div className="pagination">
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button 
+                key={index + 1} 
+                onClick={() => handlePageChange(index + 1)}
+                className={currentPage === index + 1 ? 'active' : ''}
+                disabled={currentPage === index + 1}
+              >
+                {index + 1}
+              </button>
+            ))}
           </div>
           
           <div className="map-container">
@@ -585,7 +623,6 @@ function App() {
           <footer className="App-footer">
             <div className="footer-content">
               <div className="footer-tagline">COMMITTED TO INNOVATION AND EXCELLENCE</div>
-              <p className="footer-description">IN SECURITY RISK MITIGATION & PROTECTION SERVICES</p>
               <p className="made-by">Made by Ru8ik</p>
             </div>
           </footer>

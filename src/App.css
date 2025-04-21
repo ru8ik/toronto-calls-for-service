@@ -311,6 +311,19 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Filter info styles */
+.filter-info {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.filter-info p {
+  margin: 5px 0;
+}
+
 /* Table styles */
 .table-container {
   overflow-x: auto;
@@ -416,6 +429,40 @@ body {
   color: var(--text-muted);
   margin: 10px 15px;
   font-style: italic;
+}
+
+/* Pagination styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.pagination button {
+  background-color: var(--bg-card);
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination button:hover {
+  background-color: var(--bg-accent);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination button.active {
+  background-color: var(--accent-color);
+  color: var(--bg-dark);
+  font-weight: bold;
+  border-color: var(--accent-color);
 }
 
 /* Map container styles */
