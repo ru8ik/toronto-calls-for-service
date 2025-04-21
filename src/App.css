@@ -1,14 +1,14 @@
 /* Base styles */
 :root {
-  --primary-color: #00264d;  /* Deep blue like OZ Security */
-  --secondary-color: #031b33;
-  --accent-color: #ccaa66;  /* Gold accent like OZ Security */
+  --primary-color: #1D2629  ;  /* Deep blue like OZ Security */
+  --secondary-color: #1D2629;
+  --accent-color: #ffffff;  /* Gold accent like OZ Security */
   --accent-color-hover: #d9ba78;
   --text-light: #ffffff;
   --text-muted: #a0a0a0;
   --text-dark: #333333;
-  --bg-dark: #020810;
-  --bg-card: #0f1520;
+  --bg-dark: #212121;
+  --bg-card: #212121;
   --bg-accent: #1a293d;
   --border-color: #1c2a3b;
   --shadow-color: rgba(0, 0, 0, 0.25);
