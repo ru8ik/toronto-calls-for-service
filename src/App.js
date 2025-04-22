@@ -154,6 +154,20 @@ const NEIGHBOURHOOD_TO_DIVISION = {
   "Woodbine Corridor (55)": ["55"]
 };
 
+// Create custom icon for emergency calls
+const createCustomIcon = (isEmergency) => {
+  return L.icon({
+    iconUrl: isEmergency 
+      ? 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png'
+      : 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+};
+
 // Map helper component to update the map view when center changes
 function MapUpdater({ center, zoom }) {
   const map = useMap();
@@ -166,6 +180,34 @@ function MapUpdater({ center, zoom }) {
       });
     }
   }, [center, zoom, map]);
+  
+  return null;
+}
+
+// Component to fit map bounds to include all markers
+function AutoZoomToMarkers({ calls }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (calls && calls.length > 0) {
+      // Create an array of valid latlng positions
+      const validPositions = calls
+        .filter(call => call.LATITUDE && call.LONGITUDE)
+        .map(call => [call.LATITUDE, call.LONGITUDE]);
+      
+      // Only proceed if we have valid positions
+      if (validPositions.length > 0) {
+        // Create a Leaflet bounds object from all positions
+        const bounds = L.latLngBounds(validPositions);
+        
+        // Fit the map to these bounds with some padding
+        map.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 13
+        });
+      }
+    }
+  }, [calls, map]);
   
   return null;
 }
@@ -188,6 +230,7 @@ function App() {
   const prevCallsRef = useRef([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 30;
+  const [viewMode, setViewMode] = useState('standard'); // 'standard' or 'map-first'
 
   const API_URL = 'https://services.arcgis.com/S9th0jAJ7bqgIRjw/arcgis/rest/services/C4S_Public_NoGO/FeatureServer/0/query?where=1=1&outFields=*&f=json';
 
@@ -284,6 +327,14 @@ function App() {
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
+
+  // Reset selected call when switching to map-first view
+  useEffect(() => {
+    if (viewMode === 'map-first') {
+      // Don't reset selectedCall to maintain any current selection
+      // Just let the AutoZoomToMarkers handle zooming to fit all markers
+    }
+  }, [viewMode]);
 
   // Handle sorting
   const handleSort = (key) => {
@@ -450,6 +501,20 @@ function App() {
 
       <header className="App-header">
         <h1>Toronto Calls for Service</h1>
+        <div className="view-toggle">
+          <button 
+            className={viewMode === 'standard' ? 'active' : ''} 
+            onClick={() => setViewMode('standard')}
+          >
+            Table First
+          </button>
+          <button 
+            className={viewMode === 'map-first' ? 'active' : ''} 
+            onClick={() => setViewMode('map-first')}
+          >
+            Map First
+          </button>
+        </div>
         <p className="last-updated">
           Last updated: {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm:ss a') : 'Loading...'}
         </p>
@@ -520,105 +585,234 @@ function App() {
         <div className="error">{error}</div>
       ) : (
         <>
-          <div className="table-container">
-            <div className="table-header">
-              <h3>Active Calls <span className="section-accent">Real-Time Monitoring</span></h3>
-            </div>
-            <table className="calls-table">
-              <thead>
-                <tr>
-                  <th onClick={() => handleSort('formattedTime')}>
-                    Time {sortConfig.key === 'formattedTime' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                  </th>
-                  <th onClick={() => handleSort('DIVISION')}>
-                    Division {sortConfig.key === 'DIVISION' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                  </th>
-                  <th onClick={() => handleSort('CALL_TYPE')}>
-                    Type {sortConfig.key === 'CALL_TYPE' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                  </th>
-                  <th onClick={() => handleSort('CROSS_STREETS')}>
-                    Cross Street {sortConfig.key === 'CROSS_STREETS' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.length > 0 ? (
-                  currentItems.map((call, index) => (
-                    <tr 
-                      key={index} 
-                      onClick={() => handleRowClick(call)}
-                      className={`
-                        ${selectedCall && selectedCall.OBJECTID === call.OBJECTID ? 'selected-row' : ''}
-                        ${isEmergencyCall(call.CALL_TYPE) ? 'emergency-call' : ''}
-                      `}
-                    >
-                      <td>{call.formattedTime}</td>
-                      <td>{call.DIVISION}</td>
-                      <td>{call.CALL_TYPE}</td>
-                      <td>{call.CROSS_STREETS}</td>
+          {viewMode === 'standard' ? (
+            // Standard view (table first, then map)
+            <>
+              <div className="table-container">
+                <div className="table-header">
+                  <h3>Active Calls <span className="section-accent">Real-Time Monitoring</span></h3>
+                </div>
+                <table className="calls-table">
+                  <thead>
+                    <tr>
+                      <th onClick={() => handleSort('formattedTime')}>
+                        Time {sortConfig.key === 'formattedTime' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th onClick={() => handleSort('DIVISION')}>
+                        Division {sortConfig.key === 'DIVISION' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th onClick={() => handleSort('CALL_TYPE')}>
+                        Type {sortConfig.key === 'CALL_TYPE' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th onClick={() => handleSort('CROSS_STREETS')}>
+                        Cross Street {sortConfig.key === 'CROSS_STREETS' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="no-data">No calls matching your filters</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            <p className="table-info">Showing {currentItems.length} of {filteredCalls.length} calls</p>
-          </div>
+                  </thead>
+                  <tbody>
+                    {currentItems.length > 0 ? (
+                      currentItems.map((call, index) => (
+                        <tr 
+                          key={index} 
+                          onClick={() => handleRowClick(call)}
+                          className={`
+                            ${selectedCall && selectedCall.OBJECTID === call.OBJECTID ? 'selected-row' : ''}
+                            ${isEmergencyCall(call.CALL_TYPE) ? 'emergency-call' : ''}
+                          `}
+                        >
+                          <td>{call.formattedTime}</td>
+                          <td>{call.DIVISION}</td>
+                          <td>{call.CALL_TYPE}</td>
+                          <td>{call.CROSS_STREETS}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="no-data">No calls matching your filters</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <p className="table-info">Showing {currentItems.length} of {filteredCalls.length} calls</p>
+              </div>
           
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button 
-                key={index + 1} 
-                onClick={() => handlePageChange(index + 1)}
-                className={currentPage === index + 1 ? 'active' : ''}
-                disabled={currentPage === index + 1}
-              >
-                {index + 1}
-              </button>
-            ))}
-          </div>
+              <div className="pagination">
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button 
+                    key={index + 1} 
+                    onClick={() => handlePageChange(index + 1)}
+                    className={currentPage === index + 1 ? 'active' : ''}
+                    disabled={currentPage === index + 1}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
           
-          <div className="map-container">
-            <h3>Call Location Map <span className="section-accent">Toronto Area</span></h3>
-            <p className="map-instruction">Click on a row above to view its location on the map</p>
-            <MapContainer center={mapCenter} zoom={13} className="leaflet-container">
-              <MapUpdater center={mapCenter} zoom={14} />
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              {selectedCall && (
-                <Marker 
-                  position={[selectedCall.LATITUDE, selectedCall.LONGITUDE]}
-                  eventHandlers={{
-                    mouseover: (e) => {
-                      e.target.openPopup();
+              <div className="map-container">
+                <h3>Call Location Map <span className="section-accent">Toronto Area</span></h3>
+                <p className="map-instruction">Click on a row above to view its location on the map</p>
+                <MapContainer center={mapCenter} zoom={13} className="leaflet-container">
+                  <MapUpdater center={mapCenter} zoom={14} />
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  {selectedCall && (
+                    <Marker 
+                      position={[selectedCall.LATITUDE, selectedCall.LONGITUDE]}
+                      icon={createCustomIcon(isEmergencyCall(selectedCall.CALL_TYPE))}
+                      eventHandlers={{
+                        mouseover: (e) => {
+                          e.target.openPopup();
+                        }
+                      }}
+                    >
+                      <Popup>
+                        <div className="map-popup">
+                          <div className={`popup-header ${isEmergencyCall(selectedCall.CALL_TYPE) ? 'emergency-header' : ''}`}>
+                            Incident Details
+                            {isEmergencyCall(selectedCall.CALL_TYPE) && (
+                              <span className="emergency-badge">High Severity</span>
+                            )}
+                          </div>
+                          <div className="popup-content">
+                            <strong>Division:</strong> {selectedCall.DIVISION}<br />
+                            <strong>Type:</strong> {selectedCall.CALL_TYPE}<br />
+                            <strong>Location:</strong> {selectedCall.CROSS_STREETS}<br />
+                            <strong>Time:</strong> {selectedCall.formattedTime}
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                </MapContainer>
+              </div>
+            </>
+          ) : (
+            // Map-first view (map on top, then table)
+            <>
+              <div className="map-container map-first-view">
+                <h3>Call Location Map <span className="section-accent">Toronto Area</span></h3>
+                <p className="map-instruction">Call locations will appear here. Click a row in the table below for details.</p>
+                <MapContainer center={mapCenter} zoom={10} className="leaflet-container">
+                  <MapUpdater center={mapCenter} zoom={10} />
+                  <AutoZoomToMarkers calls={filteredCalls} />
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  {currentItems.map((call, index) => {
+                    if (call.LATITUDE && call.LONGITUDE) {
+                      return (
+                        <Marker 
+                          key={index}
+                          position={[call.LATITUDE, call.LONGITUDE]}
+                          icon={createCustomIcon(isEmergencyCall(call.CALL_TYPE))}
+                          eventHandlers={{
+                            click: () => handleRowClick(call),
+                            mouseover: (e) => {
+                              // Only open popup after 0.5 second hover
+                              setTimeout(() => {
+                                if (e.target._icon && e.target._icon.matches(':hover')) {
+                                  e.target.openPopup();
+                                }
+                              }, 500);
+                            }
+                          }}
+                        >
+                          <Popup>
+                            <div className="map-popup">
+                              <div className={`popup-header ${isEmergencyCall(call.CALL_TYPE) ? 'emergency-header' : ''}`}>
+                                Incident Details
+                                {isEmergencyCall(call.CALL_TYPE) && (
+                                  <span className="emergency-badge">High Severity</span>
+                                )}
+                              </div>
+                              <div className="popup-content">
+                                <strong>Division:</strong> {call.DIVISION}<br />
+                                <strong>Type:</strong> {call.CALL_TYPE}<br />
+                                <strong>Location:</strong> {call.CROSS_STREETS}<br />
+                                <strong>Time:</strong> {call.formattedTime}
+                              </div>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      );
                     }
-                  }}
-                >
-                  <Popup>
-                    <div className="map-popup">
-                      <div className={`popup-header ${isEmergencyCall(selectedCall.CALL_TYPE) ? 'emergency-header' : ''}`}>
-                        Incident Details
-                        {isEmergencyCall(selectedCall.CALL_TYPE) && (
-                          <span className="emergency-badge">Emergency</span>
-                        )}
-                      </div>
-                      <div className="popup-content">
-                        <strong>Division:</strong> {selectedCall.DIVISION}<br />
-                        <strong>Type:</strong> {selectedCall.CALL_TYPE}<br />
-                        <strong>Location:</strong> {selectedCall.CROSS_STREETS}<br />
-                        <strong>Time:</strong> {selectedCall.formattedTime}
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              )}
-            </MapContainer>
-          </div>
+                    return null;
+                  })}
+                  {selectedCall && (
+                    <MapUpdater
+                      center={[selectedCall.LATITUDE, selectedCall.LONGITUDE]}
+                      zoom={14}
+                    />
+                  )}
+                </MapContainer>
+              </div>
+
+              <div className="table-container">
+                <div className="table-header">
+                  <h3>Active Calls <span className="section-accent">Real-Time Monitoring</span></h3>
+                </div>
+                <table className="calls-table">
+                  <thead>
+                    <tr>
+                      <th onClick={() => handleSort('formattedTime')}>
+                        Time {sortConfig.key === 'formattedTime' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th onClick={() => handleSort('DIVISION')}>
+                        Division {sortConfig.key === 'DIVISION' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th onClick={() => handleSort('CALL_TYPE')}>
+                        Type {sortConfig.key === 'CALL_TYPE' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th onClick={() => handleSort('CROSS_STREETS')}>
+                        Cross Street {sortConfig.key === 'CROSS_STREETS' && (sortConfig.direction === 'asc' ? '▲' : '▼')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentItems.length > 0 ? (
+                      currentItems.map((call, index) => (
+                        <tr 
+                          key={index} 
+                          onClick={() => handleRowClick(call)}
+                          className={`
+                            ${selectedCall && selectedCall.OBJECTID === call.OBJECTID ? 'selected-row' : ''}
+                            ${isEmergencyCall(call.CALL_TYPE) ? 'emergency-call' : ''}
+                          `}
+                        >
+                          <td>{call.formattedTime}</td>
+                          <td>{call.DIVISION}</td>
+                          <td>{call.CALL_TYPE}</td>
+                          <td>{call.CROSS_STREETS}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="no-data">No calls matching your filters</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                <p className="table-info">Showing {currentItems.length} of {filteredCalls.length} calls</p>
+              </div>
+          
+              <div className="pagination">
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button 
+                    key={index + 1} 
+                    onClick={() => handlePageChange(index + 1)}
+                    className={currentPage === index + 1 ? 'active' : ''}
+                    disabled={currentPage === index + 1}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           <footer className="App-footer">
             <div className="footer-content">
