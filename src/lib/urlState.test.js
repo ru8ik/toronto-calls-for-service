@@ -31,10 +31,16 @@ describe('parseHash', () => {
     expect(sorted(r.selection.types)).toEqual(['BREAK & ENTER']);
   });
 
-  test('malformed input returns an empty main-page route instead of throwing', () => {
-    expect(() => parseHash('#/aggregate?div=%E0%A4%A')).not.toThrow();
+  test('unmatched routes fall back to main page', () => {
     expect(parseHash('#####').page).toBe('main');
     expect(parseHash(undefined).page).toBe('main');
+  });
+
+  test('malformed values in valid route do not throw, stay on aggregate page, and drop only the bad value', () => {
+    expect(() => parseHash('#/aggregate?div=%E0%A4%A')).not.toThrow();
+    const r = parseHash('#/aggregate?div=%E0%A4%A,D51');
+    expect(r.page).toBe('aggregate');
+    expect(sorted(r.selection.divisions)).toEqual(['D51']);
   });
 
   test('drops empty values', () => {
