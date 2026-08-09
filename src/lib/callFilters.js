@@ -95,3 +95,31 @@ export function summarize(matching, selection) {
 
   return { rows, columns, counts, rowTotals, colTotals, grandTotal };
 }
+
+const NO_VALUES = new Set();
+
+function tally(calls, field) {
+  const result = {};
+  calls.forEach((c) => {
+    result[c[field]] = (result[c[field]] || 0) + 1;
+  });
+  return result;
+}
+
+/**
+ * Counts shown beside each checkbox. Cross-filtered: each category's counts
+ * apply the *other* category's selection only, so a number answers
+ * "how many would ticking this add?".
+ */
+export function facetCounts(calls, selection) {
+  return {
+    byDivision: tally(
+      filterCalls(calls, { divisions: NO_VALUES, types: selection.types }),
+      'DIVISION'
+    ),
+    byType: tally(
+      filterCalls(calls, { divisions: selection.divisions, types: NO_VALUES }),
+      'CALL_TYPE'
+    ),
+  };
+}

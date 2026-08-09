@@ -156,3 +156,29 @@ describe('summarize', () => {
     expect(s.grandTotal).toBe(0);
   });
 });
+
+import { facetCounts } from './callFilters';
+
+describe('facetCounts', () => {
+  const calls = [
+    call({ DIVISION: 'D51', CALL_TYPE: 'ROBBERY' }),
+    call({ DIVISION: 'D51', CALL_TYPE: 'ASSAULT' }),
+    call({ DIVISION: 'D52', CALL_TYPE: 'ROBBERY' }),
+  ];
+
+  test('with nothing selected, counts every call', () => {
+    const f = facetCounts(calls, sel());
+    expect(f.byDivision).toEqual({ D51: 2, D52: 1 });
+    expect(f.byType).toEqual({ ROBBERY: 2, ASSAULT: 1 });
+  });
+
+  test('division counts respect the type selection', () => {
+    const f = facetCounts(calls, sel([], ['ROBBERY']));
+    expect(f.byDivision).toEqual({ D51: 1, D52: 1 });
+  });
+
+  test('type counts ignore the type selection but respect the division selection', () => {
+    const f = facetCounts(calls, sel(['D51'], ['ROBBERY']));
+    expect(f.byType).toEqual({ ROBBERY: 1, ASSAULT: 1 });
+  });
+});
