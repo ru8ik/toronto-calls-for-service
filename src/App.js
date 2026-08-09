@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useCalls } from './hooks/useCalls';
+import { parseHash, buildHash } from './lib/urlState';
+import AggregatePage from './pages/AggregatePage';
 import './App.css';
 
 // Fix Leaflet default icon issue
@@ -213,10 +215,8 @@ function AutoZoomToMarkers({ calls }) {
 }
 
 function App() {
-  const [calls, setCalls] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const { calls, loading, error, lastUpdated, refresh } = useCalls();
+
   const [sortConfig, setSortConfig] = useState({ key: 'OCCURRENCE_TIME', direction: 'desc' });
   const [filters, setFilters] = useState({
     division: '',
@@ -227,106 +227,49 @@ function App() {
   const [mapCenter, setMapCenter] = useState([43.6532, -79.3832]); // Toronto center
   const [showNotification, setShowNotification] = useState(false);
   const [newCallsCount, setNewCallsCount] = useState(0);
-  const prevCallsRef = useRef([]);
+  const prevKeysRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 30;
   const [viewMode, setViewMode] = useState('standard'); // 'standard' or 'map-first'
+  const [route, setRoute] = useState(() => parseHash(window.location.hash));
 
-  const API_URL = 'https://services.arcgis.com/S9th0jAJ7bqgIRjw/arcgis/rest/services/C4S_Public_NoGO/FeatureServer/0/query?where=1=1&outFields=*&f=json';
+  // Hash routing. The URL is the single source of truth for page + selection.
+  useEffect(() => {
+    const onHashChange = () => setRoute(parseHash(window.location.hash));
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
-  const fetchCalls = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(API_URL);
-      
-      if (response.data && response.data.features) {
-        // Debug: Log the first feature to see its structure
-        if (response.data.features.length > 0) {
-          const firstRecord = response.data.features[0].attributes;
-          console.log('API Response Sample:', firstRecord);
-        }
-        
-        // Process and format the data
-        const formattedCalls = response.data.features.map((feature) => {
-          const attributes = feature.attributes;
-          try {
-            // Handle date formatting - use OCCURRENCE_TIME field
-            let callDate;
-            if (typeof attributes.OCCURRENCE_TIME === 'number') {
-              callDate = new Date(attributes.OCCURRENCE_TIME);
-            } else if (typeof attributes.OCCURRENCE_TIME_AGOL === 'number') {
-              callDate = new Date(attributes.OCCURRENCE_TIME_AGOL);
-            } else {
-              callDate = new Date(0);
-            }
-            
-            // Format time with hours and minutes
-            const formattedTime = isNaN(callDate.getTime()) 
-              ? 'Unknown' 
-              : format(callDate, 'h:mm a');  // Format as "7:00 PM"
-              
-            return {
-              ...attributes,
-              formattedTime,
-              // Use the correct fields from the API
-              DIVISION: attributes.DIVISION || '',
-              CALL_TYPE: attributes.CALL_TYPE || '',
-              CROSS_STREETS: attributes.CROSS_STREETS || ''
-            };
-          } catch (dateError) {
-            console.error('Error formatting date:', dateError);
-            return {
-              ...attributes,
-              formattedTime: 'Unknown',
-              DIVISION: attributes.DIVISION || '',
-              CALL_TYPE: attributes.CALL_TYPE || '',
-              CROSS_STREETS: attributes.CROSS_STREETS || ''
-            };
-          }
-        });
-
-        // Check for new calls (compare with previous calls)
-        if (prevCallsRef.current.length > 0) {
-          const currentCallIds = new Set(formattedCalls.map(call => call.OBJECTID));
-          const prevCallIds = new Set(prevCallsRef.current.map(call => call.OBJECTID));
-          
-          const newCalls = formattedCalls.filter(call => !prevCallIds.has(call.OBJECTID));
-          
-          if (newCalls.length > 0) {
-            setNewCallsCount(newCalls.length);
-            setShowNotification(true);
-            
-            // Auto-hide notification after 5 seconds
-            setTimeout(() => {
-              setShowNotification(false);
-            }, 5000);
-          }
-        }
-        
-        // Update the previous calls reference
-        prevCallsRef.current = formattedCalls;
-        
-        setCalls(formattedCalls);
-        setLastUpdated(new Date());
-      }
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to fetch data. Please try again later.');
-      setLoading(false);
-      console.error('Error fetching data:', err);
-    }
+  const goToAggregate = (selection) => {
+    window.location.hash = buildHash('aggregate', selection);
   };
 
-  // Initial fetch
+  const goToMain = (mode) => {
+    setViewMode(mode);
+    if (route.page === 'aggregate') window.location.hash = '#/';
+  };
+
+  // New-call detection, keyed on the stable synthetic key.
+  // OBJECTID cannot be used: upstream recycles it across incidents.
   useEffect(() => {
-    fetchCalls();
-    
-    // Set up auto-refresh every 5 minutes
-    const intervalId = setInterval(fetchCalls, 5 * 60 * 1000);
-    
-    // Clean up interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
+    if (calls.length === 0) return;
+    const keys = new Set(calls.map((c) => c.key));
+    if (prevKeysRef.current) {
+      const added = [...keys].filter((k) => !prevKeysRef.current.has(k)).length;
+      if (added > 0) {
+        setNewCallsCount(added);
+        setShowNotification(true);
+      }
+    }
+    prevKeysRef.current = keys;
+  }, [calls]);
+
+  // Auto-hide the notification; cleanup prevents overlapping timers.
+  useEffect(() => {
+    if (!showNotification) return undefined;
+    const timerId = setTimeout(() => setShowNotification(false), 5000);
+    return () => clearTimeout(timerId);
+  }, [showNotification, newCallsCount]);
 
   // Reset selected call when switching to map-first view
   useEffect(() => {
@@ -502,17 +445,23 @@ function App() {
       <header className="App-header">
         <h1>Toronto Calls for Service</h1>
         <div className="view-toggle">
-          <button 
-            className={viewMode === 'standard' ? 'active' : ''} 
-            onClick={() => setViewMode('standard')}
+          <button
+            className={route.page === 'main' && viewMode === 'standard' ? 'active' : ''}
+            onClick={() => goToMain('standard')}
           >
             Table First
           </button>
-          <button 
-            className={viewMode === 'map-first' ? 'active' : ''} 
-            onClick={() => setViewMode('map-first')}
+          <button
+            className={route.page === 'main' && viewMode === 'map-first' ? 'active' : ''}
+            onClick={() => goToMain('map-first')}
           >
             Map First
+          </button>
+          <button
+            className={route.page === 'aggregate' ? 'active' : ''}
+            onClick={() => goToAggregate(route.selection)}
+          >
+            Aggregate
           </button>
         </div>
         <p className="last-updated">
@@ -523,6 +472,7 @@ function App() {
         </p>
       </header>
 
+      {route.page === 'main' && (
       <div className="filter-container">
         <h3>Filter Calls</h3>
         <div className="filter-controls">
@@ -571,21 +521,34 @@ function App() {
           </div>
 
           <button className="reset-button" onClick={resetFilters}>Reset Filters</button>
-          <button className="refresh-button" onClick={fetchCalls}>Refresh Now</button>
+          <button className="refresh-button" onClick={refresh}>Refresh Now</button>
         </div>
         <div className="filter-info">
           <p>The Division and Neighbourhood filters are mutually exclusive - selecting one disables the other.</p>
           <p>The filter page refreshes automatically every 5 minutes.</p>
         </div>
       </div>
+      )}
 
       {loading ? (
         <div className="loading">Loading calls for service...</div>
-      ) : error ? (
+      ) : error && calls.length === 0 ? (
         <div className="error">{error}</div>
       ) : (
         <>
-          {viewMode === 'standard' ? (
+          {error && (
+            <div className="stale-banner">
+              Couldn't refresh — showing data from{' '}
+              {lastUpdated ? format(lastUpdated, 'h:mm a') : 'earlier'}
+            </div>
+          )}
+          {route.page === 'aggregate' ? (
+            <AggregatePage
+              calls={calls}
+              selection={route.selection}
+              onSelectionChange={goToAggregate}
+            />
+          ) : viewMode === 'standard' ? (
             // Standard view (table first, then map)
             <>
               <div className="table-container">
