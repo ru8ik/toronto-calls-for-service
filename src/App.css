@@ -701,3 +701,158 @@ footer {
 .popup-content {
   line-height: 1.6;
 }
+
+/* ---------- Aggregate page ---------- */
+
+.stale-banner {
+  margin: 0 auto 15px;
+  max-width: 1200px;
+  padding: 8px 15px;
+  border-radius: 4px;
+  background: #fff3cd;
+  color: #856404;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.aggregate-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.agg-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.agg-selector {
+  flex: 1 1 300px;
+  min-width: 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.agg-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.agg-selector-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.agg-selector-actions button {
+  margin-left: 6px;
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #f7f7f7;
+}
+
+.agg-option-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.agg-group-label {
+  margin: 10px 0 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+}
+
+.agg-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.agg-option-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agg-option-count {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
+.agg-option-zero .agg-option-name,
+.agg-option-zero .agg-option-count {
+  color: #bbb;
+}
+
+.agg-summary {
+  margin-bottom: 25px;
+}
+
+.agg-summary-scroll {
+  overflow-x: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.agg-summary-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.88rem;
+}
+
+.agg-summary-table th,
+.agg-summary-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #eee;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.agg-summary-table thead th {
+  background: #f7f7f7;
+  text-align: right;
+}
+
+.agg-summary-table .agg-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  text-align: left;
+}
+
+.agg-summary-table thead .agg-sticky {
+  background: #f7f7f7;
+}
+
+.agg-summary-table tfoot th,
+.agg-summary-table tfoot td,
+.agg-summary-table .agg-total {
+  font-weight: 700;
+  background: #fafafa;
+}
+
+@media (max-width: 700px) {
+  .agg-selectors {
+    flex-direction: column;
+  }
+}
