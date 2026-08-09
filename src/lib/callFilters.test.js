@@ -68,3 +68,39 @@ describe('filterCalls', () => {
     expect(result[0].DIVISION).toBe('D5');
   });
 });
+
+import { sortDivisions, groupDivisions } from './callFilters';
+
+describe('sortDivisions', () => {
+  test('sorts numerically, not lexically', () => {
+    expect(sortDivisions(['D51', 'D14', 'D9', 'D32'])).toEqual([
+      'D9',
+      'D14',
+      'D32',
+      'D51',
+    ]);
+  });
+
+  test('places non-division units after all divisions, alphabetically', () => {
+    expect(sortDivisions(['TAC8', 'D51', 'HP', 'D14', 'DARU'])).toEqual([
+      'D14',
+      'D51',
+      'DARU',
+      'HP',
+      'TAC8',
+    ]);
+  });
+});
+
+describe('groupDivisions', () => {
+  test('splits geographic divisions from operational units', () => {
+    expect(groupDivisions(['HP', 'D51', 'TAC8', 'D14'])).toEqual({
+      divisions: ['D14', 'D51'],
+      other: ['HP', 'TAC8'],
+    });
+  });
+
+  test('returns empty groups for empty input', () => {
+    expect(groupDivisions([])).toEqual({ divisions: [], other: [] });
+  });
+});
