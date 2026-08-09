@@ -104,3 +104,55 @@ describe('groupDivisions', () => {
     expect(groupDivisions([])).toEqual({ divisions: [], other: [] });
   });
 });
+
+import { summarize } from './callFilters';
+
+describe('summarize', () => {
+  const calls = [
+    call({ DIVISION: 'D51', CALL_TYPE: 'ROBBERY' }),
+    call({ DIVISION: 'D51', CALL_TYPE: 'ROBBERY' }),
+    call({ DIVISION: 'D51', CALL_TYPE: 'ASSAULT' }),
+    call({ DIVISION: 'D52', CALL_TYPE: 'ASSAULT' }),
+  ];
+
+  test('builds a dense zero-filled matrix with totals', () => {
+    const s = summarize(calls, sel());
+    expect(s.rows).toEqual(['D51', 'D52']);
+    expect(s.columns).toEqual(['ASSAULT', 'ROBBERY']);
+    expect(s.counts.D51.ROBBERY).toBe(2);
+    expect(s.counts.D51.ASSAULT).toBe(1);
+    expect(s.counts.D52.ROBBERY).toBe(0);
+    expect(s.rowTotals.D51).toBe(3);
+    expect(s.colTotals.ASSAULT).toBe(2);
+    expect(s.grandTotal).toBe(4);
+  });
+
+  test('INVARIANT: every cell summed equals the number of matching calls', () => {
+    const selection = sel(['D51', 'D52'], ['ROBBERY', 'ASSAULT']);
+    const matching = filterCalls(calls, selection);
+    const s = summarize(matching, selection);
+    const summed = s.rows.reduce(
+      (total, row) =>
+        total + s.columns.reduce((rowSum, col) => rowSum + s.counts[row][col], 0),
+      0
+    );
+    expect(summed).toBe(matching.length);
+    expect(s.grandTotal).toBe(matching.length);
+  });
+
+  test('a selected value with no matching calls still gets a zero-filled axis entry', () => {
+    const selection = sel(['D51', 'D99'], ['ROBBERY']);
+    const s = summarize(filterCalls(calls, selection), selection);
+    expect(s.rows).toEqual(['D51', 'D99']);
+    expect(s.counts.D99.ROBBERY).toBe(0);
+    expect(s.rowTotals.D99).toBe(0);
+    expect(s.grandTotal).toBe(2);
+  });
+
+  test('empty matching set produces empty axes and zero total', () => {
+    const s = summarize([], sel());
+    expect(s.rows).toEqual([]);
+    expect(s.columns).toEqual([]);
+    expect(s.grandTotal).toBe(0);
+  });
+});

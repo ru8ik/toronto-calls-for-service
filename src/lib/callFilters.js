@@ -49,3 +49,49 @@ export function groupDivisions(values) {
     other: sorted.filter((v) => !DIVISION_RE.test(v)),
   };
 }
+
+/**
+ * Counts matrix of divisions x call types.
+ * `counts` is dense (every row has every column, zero-filled) so renderers
+ * never need existence checks.
+ */
+export function summarize(matching, selection) {
+  const rows =
+    selection.divisions.size > 0
+      ? sortDivisions([...selection.divisions])
+      : sortDivisions([...new Set(matching.map((c) => c.DIVISION))]);
+
+  const columns =
+    selection.types.size > 0
+      ? [...selection.types].sort()
+      : [...new Set(matching.map((c) => c.CALL_TYPE))].sort();
+
+  const counts = {};
+  rows.forEach((row) => {
+    counts[row] = {};
+    columns.forEach((col) => {
+      counts[row][col] = 0;
+    });
+  });
+
+  matching.forEach((c) => {
+    const row = counts[c.DIVISION];
+    if (row && row[c.CALL_TYPE] !== undefined) {
+      row[c.CALL_TYPE] += 1;
+    }
+  });
+
+  const rowTotals = {};
+  rows.forEach((row) => {
+    rowTotals[row] = columns.reduce((sum, col) => sum + counts[row][col], 0);
+  });
+
+  const colTotals = {};
+  columns.forEach((col) => {
+    colTotals[col] = rows.reduce((sum, row) => sum + counts[row][col], 0);
+  });
+
+  const grandTotal = rows.reduce((sum, row) => sum + rowTotals[row], 0);
+
+  return { rows, columns, counts, rowTotals, colTotals, grandTotal };
+}
