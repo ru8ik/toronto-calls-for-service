@@ -5,6 +5,7 @@ import {
   facetCounts,
   groupDivisions,
 } from '../lib/callFilters';
+import { useKnownCallTypes } from '../hooks/useKnownCallTypes';
 
 function toggleValue(set, value) {
   const next = new Set(set);
@@ -63,11 +64,19 @@ function AggregatePage({ calls, selection, onSelectionChange }) {
     return groupDivisions([...values]);
   }, [calls, selection.divisions]);
 
+  const liveTypes = React.useMemo(
+    () => calls.map((c) => c.CALL_TYPE).filter(Boolean),
+    [calls]
+  );
+  const knownTypes = useKnownCallTypes(liveTypes);
+
+  // Always offer every known call type, even ones with zero calls right
+  // now, so a type can be selected pre-emptively before it occurs.
   const typeOptions = React.useMemo(() => {
-    const values = new Set(calls.map((c) => c.CALL_TYPE).filter(Boolean));
+    const values = new Set(knownTypes);
     selection.types.forEach((v) => values.add(v));
     return [...values].sort();
-  }, [calls, selection.types]);
+  }, [knownTypes, selection.types]);
 
   const sortedCalls = React.useMemo(
     () => [...matching].sort((a, b) => b.occurredAt - a.occurredAt),
