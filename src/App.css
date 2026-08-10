@@ -719,6 +719,10 @@ footer {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 15px;
+}
+
+.agg-selector,
+.agg-summary-scroll {
   color: var(--text-dark);
 }
 
@@ -755,6 +759,7 @@ footer {
   margin-left: 6px;
   padding: 3px 10px;
   font-size: 0.8rem;
+  color: var(--text-dark);
   cursor: pointer;
   border: 1px solid #ccc;
   border-radius: 3px;
