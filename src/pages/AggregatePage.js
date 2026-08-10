@@ -26,9 +26,7 @@ function CheckboxGroup({ label, values, counts, selected, onToggle, isSevere }) 
         return (
           <label
             key={value}
-            className={`agg-option${count === 0 ? ' agg-option-zero' : ''}${
-              severe ? ' agg-option-severe' : ''
-            }`}
+            className={`agg-option${severe ? ' agg-option-severe' : ''}`}
           >
             <input
               type="checkbox"

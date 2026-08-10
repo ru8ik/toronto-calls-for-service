@@ -809,14 +809,9 @@ footer {
   font-variant-numeric: tabular-nums;
 }
 
-.agg-option-zero .agg-option-name,
-.agg-option-zero .agg-option-count {
-  color: #5a5a5a;
-}
-
 /* Same red as .emergency-call's border, applied as text so severe call
-   types stand out in the selector list. Declared after .agg-option-zero
-   so a severe type at zero count still shows red, not grey. */
+   types stand out in the selector list. All non-severe types stay the
+   normal white text regardless of their current count. */
 .agg-option-severe .agg-option-name {
   color: #dc3545;
 }
