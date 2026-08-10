@@ -719,11 +719,7 @@ footer {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 15px;
-}
-
-.agg-selector,
-.agg-summary-scroll {
-  color: var(--text-dark);
+  color: var(--text-light);
 }
 
 .agg-selectors {
@@ -736,9 +732,10 @@ footer {
 .agg-selector {
   flex: 1 1 300px;
   min-width: 0;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .agg-selector-header {
@@ -746,45 +743,55 @@ footer {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 12px;
-  border-bottom: 1px solid #eee;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+  border-radius: 8px 8px 0 0;
 }
 
 .agg-selector-header h3 {
   margin: 0;
   font-size: 1rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .agg-selector-actions button {
   margin-left: 6px;
-  padding: 3px 10px;
+  padding: 4px 12px;
   font-size: 0.8rem;
-  color: var(--text-dark);
+  color: var(--text-light);
   cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  background: #f7f7f7;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-accent);
+  transition: background 0.2s ease;
+}
+
+.agg-selector-actions button:hover {
+  background: #24344a;
 }
 
 .agg-option-list {
-  max-height: 260px;
+  max-height: 340px;
   overflow-y: auto;
-  padding: 8px 12px;
+  padding: 10px 15px;
 }
 
 .agg-group-label {
-  margin: 10px 0 4px;
+  margin: 12px 0 4px;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .agg-option {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 3px 0;
+  padding: 4px 0;
   cursor: pointer;
   font-size: 0.9rem;
 }
@@ -798,13 +805,13 @@ footer {
 }
 
 .agg-option-count {
-  color: #888;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .agg-option-zero .agg-option-name,
 .agg-option-zero .agg-option-count {
-  color: #bbb;
+  color: #5a5a5a;
 }
 
 .agg-summary {
@@ -813,9 +820,10 @@ footer {
 
 .agg-summary-scroll {
   overflow-x: auto;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  box-shadow: 0 4px 12px var(--shadow-color);
 }
 
 .agg-summary-table {
@@ -826,35 +834,47 @@ footer {
 
 .agg-summary-table th,
 .agg-summary-table td {
-  padding: 7px 12px;
-  border-bottom: 1px solid #eee;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--border-color);
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  color: var(--text-light);
 }
 
 .agg-summary-table thead th {
-  background: #f7f7f7;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
   text-align: right;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+
+.agg-summary-table tbody tr:hover {
+  background-color: var(--bg-accent);
 }
 
 .agg-summary-table .agg-sticky {
   position: sticky;
   left: 0;
   z-index: 1;
-  background: #fff;
+  background-color: var(--bg-card);
   text-align: left;
 }
 
+.agg-summary-table tbody tr:hover .agg-sticky {
+  background-color: var(--bg-accent);
+}
+
 .agg-summary-table thead .agg-sticky {
-  background: #f7f7f7;
+  background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
 }
 
 .agg-summary-table tfoot th,
 .agg-summary-table tfoot td,
 .agg-summary-table .agg-total {
   font-weight: 700;
-  background: #fafafa;
+  background-color: var(--bg-accent);
 }
 
 @media (max-width: 700px) {
