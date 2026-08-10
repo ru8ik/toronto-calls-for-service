@@ -6,6 +6,7 @@ import {
   groupDivisions,
 } from '../lib/callFilters';
 import { useKnownCallTypes } from '../hooks/useKnownCallTypes';
+import { isEmergencyCall } from '../lib/severity';
 
 function toggleValue(set, value) {
   const next = new Set(set);
@@ -204,7 +205,10 @@ function AggregatePage({ calls, selection, onSelectionChange }) {
           <tbody>
             {sortedCalls.length > 0 ? (
               sortedCalls.map((c) => (
-                <tr key={c.key}>
+                <tr
+                  key={c.key}
+                  className={isEmergencyCall(c.CALL_TYPE) ? 'emergency-call' : ''}
+                >
                   <td>{c.formattedDateTime}</td>
                   <td>{c.DIVISION}</td>
                   <td>{c.CALL_TYPE}</td>

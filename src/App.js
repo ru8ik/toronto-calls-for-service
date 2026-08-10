@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useCalls } from './hooks/useCalls';
 import { parseHash, buildHash } from './lib/urlState';
+import { isEmergencyCall } from './lib/severity';
 import AggregatePage from './pages/AggregatePage';
 import './App.css';
 
@@ -419,14 +420,6 @@ function App() {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: document.querySelector('.table-container').offsetTop - 20, behavior: 'smooth' });
-  };
-
-  // Check if a call is an emergency based on keywords
-  const isEmergencyCall = (callType) => {
-    if (!callType) return false;
-    const keywords = ['gun', 'knife', 'stabb', 'shoot', 'homicide', 'break', 'enter'];
-    const lowercaseType = callType.toLowerCase();
-    return keywords.some(keyword => lowercaseType.includes(keyword));
   };
 
   return (
