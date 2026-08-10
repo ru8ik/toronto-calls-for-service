@@ -6,15 +6,20 @@
 export const EMERGENCY_KEYWORDS = [
   'gun',
   'knife',
-  'stabb',
   'shoot',
   'homicide',
   'break & enter',
   'robbery',
 ];
 
+// Call types excluded from severity even though they contain a keyword
+// above (e.g. 'SOUND OF GUNSHOTS' contains 'gun', but is not itself
+// treated as high-severity). Matched case-insensitively, exact type only.
+export const EMERGENCY_EXCLUDED_TYPES = ['SOUND OF GUNSHOTS'];
+
 export function isEmergencyCall(callType) {
   if (!callType) return false;
+  if (EMERGENCY_EXCLUDED_TYPES.includes(callType.toUpperCase())) return false;
   const lowercaseType = callType.toLowerCase();
   return EMERGENCY_KEYWORDS.some((keyword) => lowercaseType.includes(keyword));
 }

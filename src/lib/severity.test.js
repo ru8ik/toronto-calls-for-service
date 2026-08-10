@@ -3,15 +3,22 @@ import { isEmergencyCall } from './severity';
 describe('isEmergencyCall', () => {
   test('matches gun-related calls', () => {
     expect(isEmergencyCall('PERSON WITH A GUN')).toBe(true);
-    expect(isEmergencyCall('SOUND OF GUNSHOTS')).toBe(true);
+  });
+
+  test('excludes SOUND OF GUNSHOTS even though it contains "gun"', () => {
+    expect(isEmergencyCall('SOUND OF GUNSHOTS')).toBe(false);
+    expect(isEmergencyCall('sound of gunshots')).toBe(false);
   });
 
   test('matches knife-related calls', () => {
     expect(isEmergencyCall('PERSON WITH A KNIFE')).toBe(true);
   });
 
-  test('matches stabbing and shooting variants', () => {
-    expect(isEmergencyCall('STABBING')).toBe(true);
+  test('does not flag stabbing', () => {
+    expect(isEmergencyCall('STABBING')).toBe(false);
+  });
+
+  test('matches shooting variants other than gunshots', () => {
     expect(isEmergencyCall('SHOOTING')).toBe(true);
   });
 

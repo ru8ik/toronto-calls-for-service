@@ -461,7 +461,7 @@ function App() {
           Last updated: {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm:ss a') : 'Loading...'}
         </p>
         <p className="disclaimer">
-          Not affiliated with any Toronto emergency services
+          Not affiliated, endorsed by, connected to, or have any type of priprty to any Toronto emergency services - DONT MAKE ANY DESICION BASED ON THE SHOWN DATA.
         </p>
       </header>
 
@@ -772,7 +772,6 @@ function App() {
 
           <footer className="App-footer">
             <div className="footer-content">
-              <div className="footer-tagline">COMMITTED TO INNOVATION AND EXCELLENCE</div>
               <p className="made-by">Made by Ru8ik</p>
             </div>
           </footer>
