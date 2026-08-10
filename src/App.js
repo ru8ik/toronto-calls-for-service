@@ -461,7 +461,7 @@ function App() {
           Last updated: {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm:ss a') : 'Loading...'}
         </p>
         <p className="disclaimer">
-          Not affiliated, endorsed by, connected to, or have any type of priprty to any Toronto emergency services - DONT MAKE ANY DESICION BASED ON THE SHOWN DATA.
+          Not affiliated, endorsed by, connected to, or have any type of property to any Toronto emergency services - DO NOT MAKE ANY DECISION BASED ON THE SHOWN DATA.
         </p>
       </header>
 
