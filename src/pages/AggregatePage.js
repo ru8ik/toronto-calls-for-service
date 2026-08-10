@@ -15,17 +15,20 @@ function toggleValue(set, value) {
   return next;
 }
 
-function CheckboxGroup({ label, values, counts, selected, onToggle }) {
+function CheckboxGroup({ label, values, counts, selected, onToggle, isSevere }) {
   if (values.length === 0) return null;
   return (
     <div className="agg-group">
       {label && <div className="agg-group-label">{label}</div>}
       {values.map((value) => {
         const count = counts[value] || 0;
+        const severe = isSevere ? isSevere(value) : false;
         return (
           <label
             key={value}
-            className={`agg-option${count === 0 ? ' agg-option-zero' : ''}`}
+            className={`agg-option${count === 0 ? ' agg-option-zero' : ''}${
+              severe ? ' agg-option-severe' : ''
+            }`}
           >
             <input
               type="checkbox"
@@ -138,6 +141,7 @@ function AggregatePage({ calls, selection, onSelectionChange }) {
               counts={facets.byType}
               selected={selection.types}
               onToggle={(v) => setTypes(toggleValue(selection.types, v))}
+              isSevere={isEmergencyCall}
             />
           </div>
         </div>
