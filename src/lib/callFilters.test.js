@@ -155,6 +155,20 @@ describe('summarize', () => {
     expect(s.columns).toEqual([]);
     expect(s.grandTotal).toBe(0);
   });
+
+  test('divisions selected, types not: rows are the selection, columns come from matching', () => {
+    const selection = sel(['D51'], []);
+    const s = summarize(filterCalls(calls, selection), selection);
+    expect(s.rows).toEqual(['D51']);
+    expect(s.columns).toEqual(['ASSAULT', 'ROBBERY']);
+  });
+
+  test('types selected, divisions not: columns are the selection, rows come from matching', () => {
+    const selection = sel([], ['ASSAULT']);
+    const s = summarize(filterCalls(calls, selection), selection);
+    expect(s.rows).toEqual(['D51', 'D52']);
+    expect(s.columns).toEqual(['ASSAULT']);
+  });
 });
 
 import { facetCounts } from './callFilters';
